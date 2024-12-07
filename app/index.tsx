@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
+import { Video, ResizeMode } from 'expo-av';
+import '../global.css';
 
 export default function HomeScreen() {
-  const [progress, setProgress] = useState(0); // State for progress
-  const [isStarted, setIsStarted] = useState(false); // State to track button press
+  const [progress, setProgress] = useState(0); 
+  const [isStarted, setIsStarted] = useState(false);
 
   useEffect(() => {
     const lockToPortrait = async () => {
@@ -40,12 +42,16 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../assets/images/sea.jpg")}
+      {/* Use the Video component to show the GIF */}
+      <Video
+        source={require("../assets/video/background.mp4")}  // Use your GIF URL here
         style={styles.background}
+        shouldPlay
+        isLooping
+        resizeMode={ResizeMode.COVER}
       />
       <Text style={styles.title}>START YOUR JOURNEY</Text>
-
+      
       {/* Conditionally render the button only if isStarted is false */}
       {!isStarted && (
         <TouchableOpacity style={styles.button} onPress={handleStartButton}>
@@ -106,7 +112,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "100%",
     height: "100%",
-    resizeMode: "cover",
   },
   title: {
     fontSize: 36,
