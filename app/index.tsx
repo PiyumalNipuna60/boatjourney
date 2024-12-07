@@ -41,7 +41,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../../assets/images/sea.jpg")}
+        source={require("../assets/images/sea.jpg")}
         style={styles.background}
       />
       <Text style={styles.title}>START YOUR JOURNEY</Text>
@@ -56,7 +56,7 @@ export default function HomeScreen() {
       <View style={styles.progressContainer}>
         {/* Start Point Icon */}
         <Image
-          source={require("../../assets/images/start-icon.png")}
+          source={require("../assets/images/start-icon.png")}
           style={styles.icon}
         />
         {/* Progress Bar */}
@@ -65,14 +65,14 @@ export default function HomeScreen() {
         </View>
         {/* End Point Icon */}
         <Image
-          source={require("../../assets/images/end-icon.png")}
+          source={require("../assets/images/end-icon.png")}
           style={styles.icon}
         />
       </View>
 
       {/* Boat Section */}
       <Image
-        source={require("../../assets/images/boat.png")}
+        source={require("../assets/images/boat.png")}
         style={styles.boat}
       />
     </View>
