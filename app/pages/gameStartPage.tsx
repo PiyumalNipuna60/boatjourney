@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, Animated, TouchableOpacity, Dimensions} from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Image, Animated, TouchableOpacity, Dimensions, Alert } from "react-native";
+import { useNavigation } from '@react-navigation/native';
+
 
 const boat = require('../../assets/images/boat2.png');
 const ship = require('../../assets/images/ship.png');
@@ -8,23 +10,24 @@ const seaImage = require('../../assets/images/sea.jpg');
 const { width: screenWidth } = Dimensions.get("window");
 
 export default function GameStartPage() {
-  const [diesel] = useState(100);
-  const [distance] = useState(0);
+  const [diesel, setDiesel] = useState(100); // Fuel state
+  const [distance, setDistance] = useState(0); // Distance state
   const [shipScale] = useState(new Animated.Value(1));
-  const [shipLeft] = useState(100); 
-  const [boatPosition] = useState(new Animated.Value(0)); // Start from the center horizontally
-  
-  const moveStep = 100; // Move step in px
-  const maxLeft = 0; // Start position (left boundary)
-  const maxRight = screenWidth - 200; // Max right position (can be adjusted based on your screen width)
+  const [boatPosition] = useState(new Animated.Value(0));
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const navigation = useNavigation();
+
+  const moveStep = 100;
+  const maxLeft = 0;
+  const maxRight = screenWidth - 300;
 
   // Function to move the boat left
   const moveBoatLeft = () => {
     boatPosition.stopAnimation((currentValue) => {
-      const newPosition = Math.max(currentValue - moveStep, maxLeft); // Prevent going beyond left boundary
+      const newPosition = Math.max(currentValue - moveStep, maxLeft);
       Animated.timing(boatPosition, {
-        toValue: newPosition,
-        duration: 300, // Duration of the animation
+        toValue: 40,
+        duration: 300,
         useNativeDriver: true,
       }).start();
     });
@@ -33,31 +36,83 @@ export default function GameStartPage() {
   // Function to move the boat right
   const moveBoatRight = () => {
     boatPosition.stopAnimation((currentValue) => {
-      const newPosition = Math.min(currentValue + moveStep, maxRight); // Prevent going beyond right boundary
+      const newPosition = Math.min(currentValue + moveStep, maxRight);
       Animated.timing(boatPosition, {
         toValue: newPosition,
-        duration: 300, // Duration of the animation
+        duration: 300,
         useNativeDriver: true,
       }).start();
     });
+  };
+
+  // Continuous movement of boat left
+  const moveBoatLeftLong = () => {
+    if (intervalId) clearInterval(intervalId);
+
+    const id = setInterval(() => {
+      moveBoatLeft();
+    }, 1);
+
+    setIntervalId(id);
+  };
+
+  // Continuous movement of boat right
+  const moveBoatRightLong = () => {
+    if (intervalId) clearInterval(intervalId);
+
+    const id = setInterval(() => {
+      moveBoatRight();
+    }, 1);
+
+    setIntervalId(id);
+  };
+
+  // Stop continuous movement when user stops pressing
+  const stopBoatMovement = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
   };
 
   // Animation for ship scaling
   useEffect(() => {
     const moveShip = () => {
       Animated.loop(
-        Animated.sequence([  
+        Animated.sequence([ 
           Animated.timing(shipScale, {
-            toValue: 40, 
+            toValue: 40,
             duration: 3500,
             useNativeDriver: true,
-          }),
-        ])
+          })]),
       ).start();
     };
 
     moveShip();
   }, [shipScale]);
+
+  // Handle fuel reduction and distance increase over time
+  useEffect(() => {
+    const updateProgress = () => {
+      if (diesel > 0) {
+        setDiesel((prevDiesel) => Math.max(prevDiesel - 10, 0)); // Decrease fuel
+      }
+      setDistance((prevDistance) => Math.min(prevDistance + 1, 100)); // Increase distance
+    };
+
+    const id = setInterval(updateProgress, 500);
+
+    // Trigger alert when fuel reaches 0
+    if (diesel === 0) {
+      Alert.alert(
+        "Fuel Exhausted",
+        "You've run out of fuel! Game Over.",
+        [{ text: "OK", onPress: () => navigation.navigate('Home') }] 
+      );
+    }
+
+    return () => clearInterval(id); 
+  }, [diesel]);
 
   return (
     <View style={styles.container}>
@@ -69,10 +124,8 @@ export default function GameStartPage() {
         <View style={styles.row}>
           <View style={styles.column}>
             <Text style={styles.label}>Fuel</Text>
-            <View style={styles.fullPatent}>
-              <View style={styles.fuelBarContainer}>
-                <View style={[styles.fuelBar, { width: `${diesel}%` }]} />
-              </View>
+            <View style={styles.fuelBarContainer}>
+              <View style={[styles.fuelBar, { width: `${diesel}%` }]} />
             </View>
             <Text style={styles.fuelPercentage}>{`${diesel}%`}</Text>
           </View>
@@ -91,8 +144,7 @@ export default function GameStartPage() {
 
       {/* Boat Image */}
       <Animated.View
-        style={[styles.boatContainer, { transform: [{ translateX: boatPosition }] }]}
-      >
+        style={[styles.boatContainer, { transform: [{ translateX: boatPosition }] }]}>
         <Image source={boat} style={styles.boatImage} />
       </Animated.View>
 
@@ -104,10 +156,18 @@ export default function GameStartPage() {
 
       {/* Left and Right Buttons */}
       <View style={styles.buttonsContainer}>
-      <TouchableOpacity onPress={moveBoatLeft} style={styles.button}>
+        <TouchableOpacity
+          onLongPress={moveBoatLeftLong}
+          onPressOut={stopBoatMovement}
+          onPress={moveBoatLeft}
+          style={styles.button}>
           <Text style={styles.buttonText}>Left</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={moveBoatRight} style={styles.button}>
+        <TouchableOpacity
+          onLongPress={moveBoatRightLong}
+          onPressOut={stopBoatMovement}
+          onPress={moveBoatRight}
+          style={styles.button}>
           <Text style={styles.buttonText}>Right</Text>
         </TouchableOpacity>
       </View>
