@@ -1,41 +1,63 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, Animated } from "react-native";
+import { View, Text, StyleSheet, Image, Animated, TouchableOpacity, Dimensions} from "react-native";
 
-const boat = require('../../assets/images/boat2.png'); 
-const ship = require('../../assets/images/ship.png'); 
+const boat = require('../../assets/images/boat2.png');
+const ship = require('../../assets/images/ship.png');
 const seaImage = require('../../assets/images/sea.jpg');
 
-export default function GameStartPage() {
-  const [diesel, setDiesel] = useState(100);
-  const [distance, setDistance] = useState(0);// Start at the top (0)
-  const [shipScale] = useState(new Animated.Value(1)); // Start small (scale 0.5)
+const { width: screenWidth } = Dimensions.get("window");
 
-  // Animation for ship movement and scaling
+export default function GameStartPage() {
+  const [diesel] = useState(100);
+  const [distance] = useState(0);
+  const [shipScale] = useState(new Animated.Value(1));
+  const [shipLeft] = useState(100); 
+  const [boatPosition] = useState(new Animated.Value(0)); // Start from the center horizontally
+  
+  const moveStep = 100; // Move step in px
+  const maxLeft = 0; // Start position (left boundary)
+  const maxRight = screenWidth - 200; // Max right position (can be adjusted based on your screen width)
+
+  // Function to move the boat left
+  const moveBoatLeft = () => {
+    boatPosition.stopAnimation((currentValue) => {
+      const newPosition = Math.max(currentValue - moveStep, maxLeft); // Prevent going beyond left boundary
+      Animated.timing(boatPosition, {
+        toValue: newPosition,
+        duration: 300, // Duration of the animation
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  // Function to move the boat right
+  const moveBoatRight = () => {
+    boatPosition.stopAnimation((currentValue) => {
+      const newPosition = Math.min(currentValue + moveStep, maxRight); // Prevent going beyond right boundary
+      Animated.timing(boatPosition, {
+        toValue: newPosition,
+        duration: 300, // Duration of the animation
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  // Animation for ship scaling
   useEffect(() => {
     const moveShip = () => {
       Animated.loop(
-        Animated.sequence([
-          // Move down and scale up
-         
+        Animated.sequence([  
           Animated.timing(shipScale, {
-            toValue: 40, // Grow ship size as it moves
-            duration: 3500, // Scale over the full duration of the movement
+            toValue: 40, 
+            duration: 3500,
             useNativeDriver: true,
           }),
         ])
       ).start();
     };
 
-    moveShip(); // Start the ship animation when the component mounts
-  }, [ shipScale]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Diesel and distance logic can be added here
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [diesel, distance]);
+    moveShip();
+  }, [shipScale]);
 
   return (
     <View style={styles.container}>
@@ -68,23 +90,27 @@ export default function GameStartPage() {
       </View>
 
       {/* Boat Image */}
-      <View style={[styles.boatContainer]}>
+      <Animated.View
+        style={[styles.boatContainer, { transform: [{ translateX: boatPosition }] }]}
+      >
         <Image source={boat} style={styles.boatImage} />
-      </View>
+      </Animated.View>
 
       {/* Moving Ship */}
       <Animated.View
-        style={[
-          styles.shipContainer,
-          {
-            transform: [ // Move down
-              { scale: shipScale }, // Scale the ship
-            ],
-          },
-        ]}
-      >
+        style={[styles.shipContainer, { transform: [{ scale: shipScale }] }]}>
         <Image source={ship} style={styles.ship} />
       </Animated.View>
+
+      {/* Left and Right Buttons */}
+      <View style={styles.buttonsContainer}>
+      <TouchableOpacity onPress={moveBoatLeft} style={styles.button}>
+          <Text style={styles.buttonText}>Left</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={moveBoatRight} style={styles.button}>
+          <Text style={styles.buttonText}>Right</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -166,7 +192,6 @@ const styles = StyleSheet.create({
   boatContainer: {
     position: "absolute",
     bottom: 5,
-    left: "40%",
     transform: [{ translateX: -50 }],
   },
   boatImage: {
@@ -175,11 +200,30 @@ const styles = StyleSheet.create({
   },
   shipContainer: {
     position: "absolute",
-    top:"40%", // Start at the top of the screen
-    left: "40%", // Align to the center
+    top: "40%",
+    left: "40%",
   },
   ship: {
-    width: 10, // Adjust the size of the ship
+    width: 10,
     height: 10,
+  },
+  buttonsContainer: {
+    position: "absolute",
+    bottom: 30,
+    right: "2%",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "25%",
+  },
+  button: {
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 5,
+    width: "40%",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 18,
   },
 });
