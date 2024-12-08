@@ -4,7 +4,11 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import { Video, ResizeMode, Audio } from 'expo-av';
 import { useNavigation } from '@react-navigation/native';
 
-const backgroundMusic = require('../../assets/audio/seaSound.m4a'); // Path to your audio file
+const backgroundMusic = require('../../assets/audio/seaSound.m4a');
+const boat = require('../../assets/images/boat.png'); 
+const background = require('../../assets/video/background.mp4'); 
+const endIcon = require('../../assets/images/end-icon.png');  
+const startIcon = require('../../assets/images/start-icon.png'); 
 
 export default function HomeScreen() {
   const [progress, setProgress] = useState(0); 
@@ -62,7 +66,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {/* Use the Video component to show the GIF */}
       <Video
-        source={require("../../assets/video/background.mp4")}  // Use your GIF URL here
+        source={background}  // Use your GIF URL here
         style={styles.background}
         shouldPlay
         isLooping
@@ -80,7 +84,7 @@ export default function HomeScreen() {
       <View style={styles.progressContainer}>
         {/* Start Point Icon */}
         <Image
-          source={require("../../assets/images/start-icon.png")}
+          source={startIcon}
           style={styles.icon}
         />
         {/* Progress Bar */}
@@ -89,14 +93,14 @@ export default function HomeScreen() {
         </View>
         {/* End Point Icon */}
         <Image
-          source={require("../../assets/images/end-icon.png")}
+          source={endIcon}
           style={styles.icon}
         />
       </View>
 
       {/* Boat Section */}
       <Image
-        source={require("../../assets/images/boat.png")}
+        source={boat}
         style={styles.boat}
       />
     </View>

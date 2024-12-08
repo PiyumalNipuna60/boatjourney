@@ -1,22 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, Alert } from "react-native";
+import { View, Text, StyleSheet, Image, Animated } from "react-native";
+
+const boat = require('../../assets/images/boat2.png'); 
+const ship = require('../../assets/images/ship.png'); 
+const seaImage = require('../../assets/images/sea.jpg');
 
 export default function GameStartPage() {
   const [diesel, setDiesel] = useState(100);
-  const [distance, setDistance] = useState(0);
+  const [distance, setDistance] = useState(0);// Start at the top (0)
+  const [shipScale] = useState(new Animated.Value(1)); // Start small (scale 0.5)
+
+  // Animation for ship movement and scaling
+  useEffect(() => {
+    const moveShip = () => {
+      Animated.loop(
+        Animated.sequence([
+          // Move down and scale up
+         
+          Animated.timing(shipScale, {
+            toValue: 40, // Grow ship size as it moves
+            duration: 3500, // Scale over the full duration of the movement
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    };
+
+    moveShip(); // Start the ship animation when the component mounts
+  }, [ shipScale]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (diesel > 0) {
-        setDiesel(diesel - 1);
-        setDistance(distance + 1);
-      } else {
-        clearInterval(interval);
-        Alert.alert("Out of fuel", "You have run out of fuel!", [
-          { text: "OK" },
-        ]);
-      }
-    }, 1000);
+      // Diesel and distance logic can be added here
+    }, 100);
 
     return () => clearInterval(interval);
   }, [diesel, distance]);
@@ -24,10 +40,7 @@ export default function GameStartPage() {
   return (
     <View style={styles.container}>
       {/* Sea Background */}
-      <Image
-        source={require("../../assets/images/sea.jpg")}
-        style={styles.seaBackground}
-      />
+      <Image source={seaImage} style={styles.seaBackground} />
 
       {/* Fuel and Distance Display */}
       <View style={styles.infoContainer}>
@@ -35,10 +48,6 @@ export default function GameStartPage() {
           <View style={styles.column}>
             <Text style={styles.label}>Fuel</Text>
             <View style={styles.fullPatent}>
-              <Image
-                source={require("../../assets/images/end-icon.png")}
-                style={styles.icon}
-              />
               <View style={styles.fuelBarContainer}>
                 <View style={[styles.fuelBar, { width: `${diesel}%` }]} />
               </View>
@@ -49,17 +58,9 @@ export default function GameStartPage() {
           <View style={styles.column}>
             <Text style={styles.label}>Distance</Text>
             <View style={styles.distance}>
-              <Image
-                source={require("../../assets/images/start-icon.png")}
-                style={styles.icon}
-              />
               <View style={styles.distanceBarContainer}>
                 <View style={[styles.distanceBar, { width: `${distance}%` }]} />
               </View>
-              <Image
-                source={require("../../assets/images/end-icon.png")}
-                style={styles.icon}
-              />
             </View>
             <Text style={styles.distanceText}>{`${distance} km`}</Text>
           </View>
@@ -68,11 +69,22 @@ export default function GameStartPage() {
 
       {/* Boat Image */}
       <View style={[styles.boatContainer]}>
-        <Image
-          source={require("../../assets/images/boat.png")}
-          style={styles.boatImage}
-        />
+        <Image source={boat} style={styles.boatImage} />
       </View>
+
+      {/* Moving Ship */}
+      <Animated.View
+        style={[
+          styles.shipContainer,
+          {
+            transform: [ // Move down
+              { scale: shipScale }, // Scale the ship
+            ],
+          },
+        ]}
+      >
+        <Image source={ship} style={styles.ship} />
+      </Animated.View>
     </View>
   );
 }
@@ -80,7 +92,6 @@ export default function GameStartPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
   },
   seaBackground: {
     position: "absolute",
@@ -111,11 +122,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
   },
-  value: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
   fuelBarContainer: {
     width: 130,
     height: 10,
@@ -123,10 +129,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     overflow: "hidden",
     marginTop: 5,
-  },
-  fullPatent: {
-    flexDirection: "row",
-    marginLeft: -20,
   },
   fuelBar: {
     backgroundColor: "#ff4444",
@@ -163,17 +165,21 @@ const styles = StyleSheet.create({
   },
   boatContainer: {
     position: "absolute",
-    bottom: 50, // Adjust the position of the boat
-    left: "50%",
+    bottom: 5,
+    left: "40%",
     transform: [{ translateX: -50 }],
   },
-  icon: {
-    width: 20,
-    height: 20,
-    marginRight: 5,
-  },
   boatImage: {
-    width: 150, // Adjust the size of the boat
-    height: 150,
+    width: 300, // Adjust the size of the boat
+    height: 300,
+  },
+  shipContainer: {
+    position: "absolute",
+    top:"40%", // Start at the top of the screen
+    left: "40%", // Align to the center
+  },
+  ship: {
+    width: 10, // Adjust the size of the ship
+    height: 10,
   },
 });
