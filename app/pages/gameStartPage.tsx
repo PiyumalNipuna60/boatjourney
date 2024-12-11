@@ -1,19 +1,35 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Image, Animated, TouchableOpacity, Dimensions, Alert } from "react-native";
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Animated,
+  TouchableOpacity,
+  Dimensions,
+  Easing,
+  Alert,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
+const boat = require("../../assets/images/boat.png");
+const ship = require("../../assets/images/ship.png");
+const lightning = require("../../assets/images/lightning.png");
+const sadsad = require("../../assets/images/sadsad.png");
+const shark = require("../../assets/images/shark.png");
+const tonardo = require("../../assets/images/tonardo.png");
+const seaImage = require("../../assets/images/sea.jpg");
+const endIcon = require('../../assets/images/icon/australia.png');  
+const startIcon = require('../../assets/images/icon/sri_lanka.png'); 
 
-const boat = require('../../assets/images/boat2.png');
-const ship = require('../../assets/images/ship.png');
-const seaImage = require('../../assets/images/sea.jpg');
-
-const { width: screenWidth } = Dimensions.get("window");
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export default function GameStartPage() {
   const [diesel, setDiesel] = useState(100); // Fuel state
   const [distance, setDistance] = useState(0); // Distance state
-  const [shipScale] = useState(new Animated.Value(1));
-  const [boatPosition] = useState(new Animated.Value(0));
+  const [shipPosition] = useState(new Animated.Value(70)); // Vertical position of the ship
+  const initialBoatPosition = (screenWidth - 350) / 2; // Center the boat horizontally
+  const [boatPosition] = useState(new Animated.Value(initialBoatPosition)); // Horizontal position of the boat
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const navigation = useNavigation();
 
@@ -21,25 +37,27 @@ export default function GameStartPage() {
   const maxLeft = 0;
   const maxRight = screenWidth - 300;
 
-  // Function to move the boat left
+  // Function to move the boat left smoothly
   const moveBoatLeft = () => {
     boatPosition.stopAnimation((currentValue) => {
       const newPosition = Math.max(currentValue - moveStep, maxLeft);
       Animated.timing(boatPosition, {
-        toValue: 40,
-        duration: 300,
+        toValue: newPosition,
+        duration: 500,
+        easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start();
     });
   };
 
-  // Function to move the boat right
+  // Function to move the boat right smoothly
   const moveBoatRight = () => {
     boatPosition.stopAnimation((currentValue) => {
       const newPosition = Math.min(currentValue + moveStep, maxRight);
       Animated.timing(boatPosition, {
         toValue: newPosition,
-        duration: 300,
+        duration: 500,
+        easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start();
     });
@@ -75,22 +93,6 @@ export default function GameStartPage() {
     }
   };
 
-  // Animation for ship scaling
-  useEffect(() => {
-    const moveShip = () => {
-      Animated.loop(
-        Animated.sequence([ 
-          Animated.timing(shipScale, {
-            toValue: 40,
-            duration: 3500,
-            useNativeDriver: true,
-          })]),
-      ).start();
-    };
-
-    moveShip();
-  }, [shipScale]);
-
   // Handle fuel reduction and distance increase over time
   useEffect(() => {
     const updateProgress = () => {
@@ -107,12 +109,29 @@ export default function GameStartPage() {
       Alert.alert(
         "Fuel Exhausted",
         "You've run out of fuel! Game Over.",
-        [{ text: "OK", onPress: () => navigation.navigate('Home') }] 
+        [{ text: "OK", onPress: () => navigation.navigate('GameEndPage') }]
       );
     }
 
-    return () => clearInterval(id); 
+    return () => clearInterval(id);
   }, [diesel]);
+
+  // Animation for ship moving vertically
+  useEffect(() => {
+    const moveShipVertically = () => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shipPosition, {
+            toValue: screenHeight - 80, // Move to the bottom of the screen
+            duration: 3000, // Duration of the animation
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    };
+
+    moveShipVertically();
+  }, [shipPosition]);
 
   return (
     <View style={styles.container}>
@@ -144,13 +163,21 @@ export default function GameStartPage() {
 
       {/* Boat Image */}
       <Animated.View
-        style={[styles.boatContainer, { transform: [{ translateX: boatPosition }] }]}>
+        style={[
+          styles.boatContainer,
+          { transform: [{ translateX: boatPosition }] },
+        ]}
+      >
         <Image source={boat} style={styles.boatImage} />
       </Animated.View>
 
       {/* Moving Ship */}
       <Animated.View
-        style={[styles.shipContainer, { transform: [{ scale: shipScale }] }]}>
+        style={[
+          styles.shipContainer,
+          { transform: [{ translateY: shipPosition }] },
+        ]}
+      >
         <Image source={ship} style={styles.ship} />
       </Animated.View>
 
@@ -160,14 +187,16 @@ export default function GameStartPage() {
           onLongPress={moveBoatLeftLong}
           onPressOut={stopBoatMovement}
           onPress={moveBoatLeft}
-          style={styles.button}>
+          style={styles.button}
+        >
           <Text style={styles.buttonText}>Left</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onLongPress={moveBoatRightLong}
           onPressOut={stopBoatMovement}
           onPress={moveBoatRight}
-          style={styles.button}>
+          style={styles.button}
+        >
           <Text style={styles.buttonText}>Right</Text>
         </TouchableOpacity>
       </View>
@@ -190,8 +219,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     position: "absolute",
     display: "flex",
-    top: 20,
-    right: 20,
+    right: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     padding: 10,
     borderRadius: 10,
@@ -208,8 +236,13 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
   },
+  icon: {
+    width:70,
+    height: 70,
+    resizeMode: "contain",
+  },
   fuelBarContainer: {
-    width: 130,
+    width: 110,
     height: 10,
     backgroundColor: "#ddd",
     borderRadius: 5,
@@ -240,7 +273,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   distanceBar: {
-    backgroundColor: "#44ff44", // Green color for distance
+    backgroundColor: "#44ff44",
     height: "100%",
   },
   distanceText: {
@@ -250,22 +283,23 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   boatContainer: {
+    width: "100%",
+    height: "100%",
     position: "absolute",
-    bottom: 5,
-    transform: [{ translateX: -50 }],
+    top: "85%",
   },
   boatImage: {
-    width: 300, // Adjust the size of the boat
-    height: 300,
+    width: "20%",
+    height: "20%",
   },
   shipContainer: {
     position: "absolute",
-    top: "40%",
+    width: "100%",
     left: "40%",
   },
   ship: {
-    width: 10,
-    height: 10,
+    width:70,
+    height: 80,
   },
   buttonsContainer: {
     position: "absolute",

@@ -7,8 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 const backgroundMusic = require('../../assets/audio/seaSound.m4a');
 const boat = require('../../assets/images/boat.png'); 
 const background = require('../../assets/video/background.mp4'); 
-const endIcon = require('../../assets/images/end-icon.png');  
-const startIcon = require('../../assets/images/start-icon.png'); 
+const endIcon = require('../../assets/images/icon/australia.png');  
+const startIcon = require('../../assets/images/icon/sri_lanka.png'); 
 
 export default function HomeScreen() {
   const [progress, setProgress] = useState(0); 
@@ -146,29 +146,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 20,
+    bottom: 15,
   },
   icon: {
-    width: 50,
-    height: 50,
+    width:70,
+    height: 70,
     resizeMode: "contain",
   },
   progressBar: {
     flex: 1,
-    height: 20,
+    height: 30,
     backgroundColor: "#d3d3d3",
-    borderRadius: 10,
+    borderRadius: 20,
+    borderColor:'#2e6ddf',
+    borderWidth:4,
     marginHorizontal: 10,
     overflow: "hidden",
   },
   progress: {
     height: "100%",
-    backgroundColor: "#2e6ddf",
+    backgroundColor: "#e8df33",
   },
   boat: {
     width: 200,
     height: 120,
     resizeMode: "contain",
     position: "absolute",
-    bottom: 20,
+    bottom: -30,
   },
 });
