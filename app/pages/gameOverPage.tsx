@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
     height: "550%",
     left:'25%',
     position: "absolute",
-    zIndex: 1,
   },
   boatImage1: {
     width: "40%",
