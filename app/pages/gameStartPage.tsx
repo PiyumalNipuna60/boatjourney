@@ -27,10 +27,11 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 export default function GameStartPage() {
   const [diesel, setDiesel] = useState(100); // Fuel state
   const [distance, setDistance] = useState(0); // Distance state
-  const [shipPosition] = useState(new Animated.Value(70)); // Vertical position of the ship
+  const [shipPosition] = useState(new Animated.Value(100)); // Vertical position of the ship
+  const [shipStartX] = useState(new Animated.Value(Math.random() * (screenWidth - 70))); // Random horizontal position of the ship
   const initialBoatPosition = (screenWidth - 350) / 2; // Center the boat horizontally
   const [boatPosition] = useState(new Animated.Value(initialBoatPosition)); // Horizontal position of the boat
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [intervalId, setIntervalId] = useState(null);
   const navigation = useNavigation();
 
   const moveStep = 100;
@@ -43,7 +44,7 @@ export default function GameStartPage() {
       const newPosition = Math.max(currentValue - moveStep, maxLeft);
       Animated.timing(boatPosition, {
         toValue: newPosition,
-        duration: 500,
+        duration: 100,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start();
@@ -56,7 +57,7 @@ export default function GameStartPage() {
       const newPosition = Math.min(currentValue + moveStep, maxRight);
       Animated.timing(boatPosition, {
         toValue: newPosition,
-        duration: 500,
+        duration: 100,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start();
@@ -97,7 +98,7 @@ export default function GameStartPage() {
   useEffect(() => {
     const updateProgress = () => {
       if (diesel > 0) {
-        setDiesel((prevDiesel) => Math.max(prevDiesel - 10, 0)); // Decrease fuel
+        setDiesel((prevDiesel) => Math.max(prevDiesel - 2, 0)); // Decrease fuel
       }
       setDistance((prevDistance) => Math.min(prevDistance + 1, 100)); // Increase distance
     };
@@ -118,20 +119,19 @@ export default function GameStartPage() {
 
   // Animation for ship moving vertically
   useEffect(() => {
-    const moveShipVertically = () => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(shipPosition, {
-            toValue: screenHeight - 80, // Move to the bottom of the screen
-            duration: 3000, // Duration of the animation
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
+    const moveShip = () => {
+      shipStartX.setValue(Math.random() * (screenWidth - 70)); // Reset to a new random horizontal position
+      shipPosition.setValue(-100); // Start above the screen
+
+      Animated.timing(shipPosition, {
+        toValue: screenHeight, // Move to the bottom of the screen
+        duration: 4000, // Duration of the animation
+        useNativeDriver: true,
+      }).start(() => moveShip()); // Loop the animation
     };
 
-    moveShipVertically();
-  }, [shipPosition]);
+    moveShip();
+  }, [shipPosition, shipStartX]);
 
   return (
     <View style={styles.container}>
@@ -175,7 +175,12 @@ export default function GameStartPage() {
       <Animated.View
         style={[
           styles.shipContainer,
-          { transform: [{ translateY: shipPosition }] },
+          {
+            transform: [
+              { translateX: shipStartX },
+              { translateY: shipPosition },
+            ],
+          },
         ]}
       >
         <Image source={ship} style={styles.ship} />
@@ -236,11 +241,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
   },
-  icon: {
-    width:70,
-    height: 70,
-    resizeMode: "contain",
-  },
   fuelBarContainer: {
     width: 110,
     height: 10,
@@ -294,11 +294,11 @@ const styles = StyleSheet.create({
   },
   shipContainer: {
     position: "absolute",
-    width: "100%",
-    left: "40%",
+    width: 70,
+    height: 80,
   },
   ship: {
-    width:70,
+    width: 70,
     height: 80,
   },
   buttonsContainer: {
